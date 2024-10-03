@@ -26,7 +26,7 @@ class Role extends Model
      */
     public function users()
     {
-        return $this->belongsToMany(User::class, 'role_user');
+        return $this->belongsToMany(User::class, 'role_user')->withTimestamps();
     }
 
     /**
@@ -40,7 +40,7 @@ class Role extends Model
     }
 
     /**
-     * Assign a permission or more to a role.
+     * Assign a permission or more to a role by permission name.
      * 
      * @param array $permissionNames
      * @return void
@@ -49,6 +49,17 @@ class Role extends Model
     {
         $permissions = Permission::whereIn('name', $permissionNames)->get();
         $this->permissions()->syncWithoutDetaching($permissions->pluck('id')->toArray());
+    }
+
+    /**
+     * Assign multiple permissions to the role by permission's IDs.
+
+     * @param array $permissionIds
+     * @return void
+     */
+    public function assignPermissions(array $permissionIds)
+    {
+        $this->permissions()->syncWithoutDetaching($permissionIds);
     }
 
     /**
