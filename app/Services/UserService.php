@@ -13,7 +13,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class UserService
 {
- /**
+    /**
      * Retrieve all users with pagination.
      * 
      * @throws \Exception
@@ -22,7 +22,9 @@ class UserService
     public function listAllUsers()
     {
         try {
-            return User::paginate(5);
+            $users = User::with('roles.permissions')->paginate(5);
+
+            return $users;
         } catch (\Exception $e) {
             Log::error('Failed to retrieve users: ' . $e->getMessage());
             throw new \Exception('An error occurred on the server.');
@@ -36,10 +38,14 @@ class UserService
      * @throws \Exception
      * @return User|\Illuminate\Database\Eloquent\Model
      */
-    public function createUser(array $data)
+    public function createUser(array $data, array $roleIds)
     {
         try {
-            return User::create($data);
+            $user = User::create($data);
+            $user->assignRoles($roleIds);
+            $user->load('roles.permissions');
+
+            return $user;
         } catch (\Exception $e) {
             Log::error('User creation failed: ' . $e->getMessage());
             throw new \Exception('An error occurred on the server.');
@@ -56,8 +62,10 @@ class UserService
     public function showUser(string $id)
     {
         try {
-            return User::findOrFail($id);
+            $user = User::findOrFail($id);
+            $user->load('roles.permissions');
 
+            return $user;
         } catch (ModelNotFoundException $e) {
             throw new \Exception('User not found: ' . $e->getMessage());
         } catch (\Exception $e) {
@@ -71,14 +79,26 @@ class UserService
      * 
      * @param string $id
      * @param array $data
+     * @param array $roleIds
      * @throws \Exception
-     * @return User
+     * @return User|User[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model
      */
-    public function updateUser(string $id, array $data)
+    public function updateUser(string $id, array $data, array $roleIds = [])
     {
         try {
             $user = User::findOrFail($id);
             $user->update(array_filter($data));
+
+            // Filter out null values from the roles array
+            // Only keep non-null values
+            $validRoleIds = array_filter($roleIds, function ($roleId) {
+                return !is_null($roleId);
+            });
+
+            if (!empty($validRoleIds)) {
+                $user->roles()->sync($validRoleIds);
+            }
+            $user->load('roles.permissions');
 
             return $user;
         } catch (ModelNotFoundException $e) {
@@ -109,7 +129,7 @@ class UserService
             throw new \Exception('An error occurred on the server.');
         }
     }
-    
+
     /**
      * Assign a role to a user.
      * 
@@ -118,12 +138,14 @@ class UserService
      * @throws \Exception
      * @return void
      */
-    public function assignRoleToUser(string $userId, string $roleName)
+    public function assignRoleToUser(string $userId, string $roleName): array
     {
         try {
-            $user = User::findOrFail($userId);
+            $user = User::select(['id', 'name'])->findOrFail($userId);
             $user->assignRole($roleName);
+            $user->load('roles.permissions');
 
+            return $user;
         } catch (ModelNotFoundException $e) {
             throw new \Exception('User not found: ' . $e->getMessage());
         } catch (\Exception $e) {
@@ -145,7 +167,6 @@ class UserService
         try {
             $user = User::findOrFail($userId);
             $user->removeRole($roleName);
-
         } catch (ModelNotFoundException $e) {
             throw new \Exception('User not found: ' . $e->getMessage());
         } catch (\Exception $e) {

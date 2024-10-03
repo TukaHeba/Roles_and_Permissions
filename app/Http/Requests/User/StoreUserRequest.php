@@ -44,6 +44,8 @@ class StoreUserRequest extends FormRequest
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|max:30|confirmed',
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,id',
         ];
     }
     /**
@@ -57,6 +59,7 @@ class StoreUserRequest extends FormRequest
             'name' => 'full name',
             'email' => 'email address',
             'password' => 'password',
+            'roles' => 'roles',
         ];
     }
 
@@ -74,6 +77,7 @@ class StoreUserRequest extends FormRequest
             'email' => 'The :attribute must be a valid email address.',
             'unique' => 'The :attribute has already been taken.',
             'confirmed' => 'The :attribute confirmation does not match.',
+            'roles.*.exists' => 'The selected role(s) are invalid.',
         ];
     }
 

@@ -41,7 +41,7 @@ class UserController extends Controller
         $validated = $request->validated();
 
         try {
-            $newUser = $this->userService->createUser($validated);
+            $newUser = $this->userService->createUser($validated, $validated['roles']);
             return ApiResponseService::success(new UserResource($newUser), 'User created successfully', 201);
         } catch (\Exception $e) {
             return ApiResponseService::error('An error occurred on the server.', 500);
@@ -69,7 +69,7 @@ class UserController extends Controller
         $validated = $request->validated();
 
         try {
-            $updatedUser = $this->userService->updateUser($id, $validated);
+            $updatedUser = $this->userService->updateUser($id, $validated, $validated['roles'] ?? []);
             return ApiResponseService::success(new UserResource($updatedUser), 'User updated successfully', 200);
         } catch (\Exception $e) {
             return ApiResponseService::error('An error occurred on the server.', 500);
@@ -94,8 +94,9 @@ class UserController extends Controller
     public function assignRole(string $userId, string $roleName)
     {
         try {
-            $this->userService->assignRoleToUser($userId, $roleName);
-            return ApiResponseService::success(null, 'Role assigned successfully', 200);
+            $data = $this->userService->assignRoleToUser($userId, $roleName);
+
+            return ApiResponseService::success($data, 'Role assigned successfully', 200);
         } catch (\Exception $e) {
             return ApiResponseService::error('An error occurred on the server.', 500);
         }

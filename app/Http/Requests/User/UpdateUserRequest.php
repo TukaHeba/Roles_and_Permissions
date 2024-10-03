@@ -44,6 +44,8 @@ class UpdateUserRequest extends FormRequest
             'name' => 'nullable|string|max:100',
             'email' => 'nullable|string|email|max:255',
             'password' => 'nullable|string|min:8|max:30',
+            'roles' => 'nullable|array',
+            'roles.*' => 'nullable|exists:roles,id',
         ];
     }
     /**
@@ -57,6 +59,7 @@ class UpdateUserRequest extends FormRequest
             'name' => 'full name',
             'email' => 'email address',
             'password' => 'password',
+            'roles' => 'roles',
         ];
     }
 
@@ -71,6 +74,7 @@ class UpdateUserRequest extends FormRequest
             'max' => 'The :attribute may not be greater than :max characters.',
             'min' => 'The :attribute must be at least :min characters.',
             'email.email' => 'The :attribute must be a valid email address.',
+            'roles.*.exists' => 'The selected role(s) are invalid.',
         ];
     }
 

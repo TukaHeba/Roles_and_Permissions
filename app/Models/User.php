@@ -43,7 +43,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        // 'password' => 'hashed',
     ];
 
     /**
@@ -88,16 +88,6 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Get the posts of the user.
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function posts()
-    {
-        return $this->hasMany(PostController::class);
-    }
-
-    /**
      * Check if the user has a specific role.
      * 
      * @param string $roleName
@@ -109,7 +99,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Assign a role to the user.
+     * Assign a role to the user by its name.
      * 
      * @param string $roleName
      * @return void
@@ -119,11 +109,17 @@ class User extends Authenticatable implements JWTSubject
         $role = Role::where('name', $roleName)->firstOrFail();
         $this->roles()->syncWithoutDetaching($role->id);
     }
-    // public function assignRole(array $roleNames)
-    // {
-    //     $roles = Role::whereIn('name', $roleNames)->get();
-    //     $this->roles()->syncWithoutDetaching($roles->pluck('id')->toArray());
-    // }
+
+    /**
+     * Assign multiple roles to the user by role's IDs.
+     *
+     * @param array $roleIds
+     * @return void
+     */
+    public function assignRoles(array $roleIds)
+    {
+        $this->roles()->syncWithoutDetaching($roleIds);
+    }
 
     /**
      * Remove a role from the user.
