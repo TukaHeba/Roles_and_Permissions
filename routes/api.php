@@ -36,23 +36,8 @@ Route::apiResource('permissions', PermissionController::class)->middleware('perm
 Route::group(['middleware' => ['permission:full_access']], function () {
     Route::apiResource('roles', RoleController::class);
     Route::post('roles/{roleId}/permissions', [RoleController::class, 'assignPermissions']);
-    Route::delete('roles/{roleId}/permissions/{permissionName}', [RoleController::class, 'revokePermission']);
 });
 
 
 // User Routes
-Route::group(['middleware' => ['permission:full_access']], function () {
-    Route::apiResource('users', UserController::class);
-    Route::post('users/{userId}/assign/{roleName}', [UserController::class, 'assignRole']);
-    Route::delete('users/{userId}/remove/{roleName}', [UserController::class, 'removeRole']);
-});
-
-
-// Post Routes
-Route::controller(PostController::class)->group(function () {
-    Route::get('posts', 'index')->middleware('permission:view_post');
-    Route::get('posts/{id}', 'show')->middleware('permission:view_post');
-    Route::post('posts', 'store')->middleware('permission:create_post');
-    Route::put('posts/{id}', 'update')->middleware('permission:edit_post');
-    Route::delete('posts/{id}', 'destroy')->middleware('permission:delete_post');
-});
+Route::apiResource('users', PermissionController::class)->middleware('permission:full_access');
